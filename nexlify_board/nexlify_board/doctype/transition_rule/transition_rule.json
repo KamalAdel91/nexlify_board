@@ -1,0 +1,215 @@
+{
+ "doctype": "DocType",
+ "name": "Transition Rule",
+ "module": "Nexlify Board",
+ "autoname": "TR-.#####",
+ "naming_rule": "Expression (old style)",
+ "title_field": "title",
+ "track_changes": 1,
+ "engine": "InnoDB",
+ "modified": "2026-10-13 17:00:00.000000",
+ "field_order": [
+  "enabled",
+  "reference_doctype",
+  "stage_field",
+  "column_break_from",
+  "from_value",
+  "to_value",
+  "section_required",
+  "required_fields",
+  "section_condition",
+  "condition",
+  "column_break_action",
+  "action",
+  "action_label",
+  "section_flow",
+  "step_label",
+  "waiting_on",
+  "column_break_flow",
+  "sequence",
+  "section_confirm",
+  "confirm_view",
+  "column_break_confirm",
+  "confirm_label",
+  "section_behaviour",
+  "open_form",
+  "message",
+  "bypass_role",
+  "title"
+ ],
+ "fields": [
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "label": "DocType",
+   "options": "DocType",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "stage_field",
+   "fieldtype": "Select",
+   "label": "Stage Field",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "The field that moves the document: status, workflow_state, or any field a Kanban board uses for its columns."
+  },
+  {
+   "fieldname": "column_break_from",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "from_value",
+   "fieldtype": "Data",
+   "label": "From",
+   "description": "Leave empty for any value. Set From or To (or both)."
+  },
+  {
+   "fieldname": "to_value",
+   "fieldtype": "Data",
+   "label": "To",
+   "reqd": 0,
+   "in_list_view": 1,
+   "description": "Leave empty for any value: the rule then fires whenever the document leaves From."
+  },
+  {
+   "fieldname": "section_required",
+   "fieldtype": "Section Break",
+   "label": "Required Before Moving"
+  },
+  {
+   "fieldname": "required_fields",
+   "fieldtype": "Table",
+   "label": "Required Fields",
+   "options": "Transition Rule Field",
+   "reqd": 0
+  },
+  {
+   "fieldname": "section_condition",
+   "fieldtype": "Section Break",
+   "label": "Condition"
+  },
+  {
+   "fieldname": "condition",
+   "fieldtype": "Code",
+   "options": "PythonExpression",
+   "label": "Condition",
+   "description": "Must be true for the move. Python, with <code>doc</code> (the document after the move) and read-only <code>frappe.db.exists / get_value / count / get_all</code>.<br>Examples: <code>doc.custom_pricing_status == \"Priced\"</code> · <code>frappe.db.exists(\"Quotation\", {\"opportunity\": doc.name, \"docstatus\": [\"!=\", 2]})</code>"
+  },
+  {
+   "fieldname": "column_break_action",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "action",
+   "fieldtype": "Data",
+   "label": "Action",
+   "description": "A button shown with the Message when the condition fails: <code>form</code> · <code>route:/app/...</code> · <code>map:dotted.path.make_x</code> · or an action a Client Script registers with <code>nexlify.kanban.action(name, fn)</code>."
+  },
+  {
+   "fieldname": "action_label",
+   "fieldtype": "Data",
+   "label": "Action Label",
+   "depends_on": "action"
+  },
+  {
+   "fieldname": "section_flow",
+   "fieldtype": "Section Break",
+   "label": "In the Flow"
+  },
+  {
+   "fieldname": "step_label",
+   "fieldtype": "Data",
+   "label": "Step Label",
+   "in_list_view": 1,
+   "description": "The short line the flow shows, e.g. \"Production finished pricing\". Empty: the Message is used."
+  },
+  {
+   "fieldname": "waiting_on",
+   "fieldtype": "Data",
+   "label": "Waiting On",
+   "description": "When someone else does this step (e.g. Production), the flow says so instead of showing the Action."
+  },
+  {
+   "fieldname": "column_break_flow",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sequence",
+   "fieldtype": "Int",
+   "label": "Sequence",
+   "description": "Order of the steps within a stage; the first unmet one is the next step."
+  },
+  {
+   "fieldname": "section_confirm",
+   "fieldtype": "Section Break",
+   "label": "Confirm Before Moving"
+  },
+  {
+   "fieldname": "confirm_view",
+   "fieldtype": "Data",
+   "label": "Confirm View",
+   "description": "A method that returns {title, html} to show before the move, with Confirm and Cancel. A whitelisted Python method or an API Server Script (which sets <code>frappe.flags.result</code>). It receives <code>doctype</code>, <code>name</code> and <code>to</code>."
+  },
+  {
+   "fieldname": "column_break_confirm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "confirm_label",
+   "fieldtype": "Data",
+   "label": "Confirm Label",
+   "depends_on": "confirm_view",
+   "description": "The Confirm button's text. Default: Confirm"
+  },
+  {
+   "fieldname": "section_behaviour",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "open_form",
+   "fieldtype": "Check",
+   "label": "Open Form on Move",
+   "description": "A Kanban drag to this column opens the form with the new value set, so the form's Client Scripts run. The card moves when the form is saved."
+  },
+  {
+   "fieldname": "message",
+   "fieldtype": "Small Text",
+   "label": "Message",
+   "description": "Shown when a save is blocked: above the missing fields, or alone when the Condition fails. Can hold HTML, including action buttons."
+  },
+  {
+   "fieldname": "bypass_role",
+   "fieldtype": "Link",
+   "label": "Role That Can Skip",
+   "options": "Role",
+   "description": "Users with this role can move documents without the required fields, e.g. for imports of old data."
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "hidden": 1,
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1
+  }
+ ]
+}

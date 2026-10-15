@@ -1,0 +1,43 @@
+{
+ "doctype": "DocType",
+ "name": "Nexlify Board DocType",
+ "module": "Nexlify Board",
+ "istable": 1,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "modified": "2026-10-13 17:00:00.000000",
+ "field_order": [
+  "reference_doctype",
+  "check_moves",
+  "flow_method"
+ ],
+ "fields": [
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "options": "DocType",
+   "label": "DocType",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "check_moves",
+   "fieldtype": "Check",
+   "label": "Check Moves",
+   "default": "1",
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "Before a Kanban drag, run the save checks without saving and show what blocks the move."
+  },
+  {
+   "fieldname": "flow_method",
+   "fieldtype": "Data",
+   "label": "Flow Steps Method",
+   "in_list_view": 1,
+   "columns": 5,
+   "description": "Optional. A method that returns the steps of each stage for the Flow: a whitelisted Python method or an API Server Script. It receives <code>doctype</code> and <code>name</code> and returns <code>{\"steps\": [{\"stage\", \"label\", \"done\", \"action\", \"action_label\", \"waiting_on\"}]}</code> (a Server Script sets <code>frappe.flags.result</code>)."
+  }
+ ],
+ "permissions": []
+}

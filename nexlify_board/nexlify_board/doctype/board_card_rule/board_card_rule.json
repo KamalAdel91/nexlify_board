@@ -1,0 +1,58 @@
+{
+ "doctype": "DocType",
+ "name": "Board Card Rule",
+ "module": "Nexlify Board",
+ "custom": 0,
+ "istable": 1,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "track_changes": 0,
+ "field_order": [
+  "condition",
+  "color",
+  "badge",
+  "badge_theme"
+ ],
+ "fields": [
+  {
+   "fieldname": "condition",
+   "fieldtype": "Small Text",
+   "label": "When",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 4,
+   "description": "e.g. eval:doc.total < doc.minimum"
+  },
+  {
+   "fieldname": "color",
+   "fieldtype": "Color",
+   "label": "Stripe Color",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "badge",
+   "fieldtype": "Data",
+   "label": "Badge Text",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "badge_theme",
+   "fieldtype": "Select",
+   "label": "Badge Color",
+   "options": "gray\nblue\ngreen\norange\nred\nyellow\npurple",
+   "default": "gray",
+   "in_list_view": 1,
+   "columns": 2
+  }
+ ],
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "owner": "Administrator",
+ "modified_by": "Administrator",
+ "creation": "2026-10-14 13:40:00.000000",
+ "modified": "2026-10-14 18:10:00.000000"
+}

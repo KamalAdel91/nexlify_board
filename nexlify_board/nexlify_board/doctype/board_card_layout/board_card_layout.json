@@ -1,0 +1,322 @@
+{
+ "doctype": "DocType",
+ "name": "Board Card Layout",
+ "module": "Nexlify Board",
+ "custom": 0,
+ "istable": 0,
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "track_changes": 1,
+ "field_order": [
+  "reference_doctype",
+  "column_break_main",
+  "enabled",
+  "section_card",
+  "replace_card",
+  "title_field",
+  "column_break_card",
+  "show_name",
+  "compact_numbers",
+  "show_stage_path",
+  "stage_labels",
+  "path_style",
+  "dedupe_actions",
+  "form_actions",
+  "section_hero",
+  "hero_field",
+  "hero_target",
+  "column_break_hero",
+  "hero_target_label",
+  "hero_note",
+  "section_next",
+  "next_steps",
+  "section_checklist",
+  "checklist",
+  "section_fields",
+  "fields",
+  "section_progress",
+  "progress_value",
+  "progress_target",
+  "column_break_progress",
+  "progress_label",
+  "progress_title",
+  "progress_secondary",
+  "progress_secondary_label",
+  "progress_condition",
+  "section_actions",
+  "actions",
+  "section_rules",
+  "rules"
+ ],
+ "fields": [
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "label": "DocType",
+   "options": "DocType",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "section_card",
+   "fieldtype": "Section Break",
+   "label": "Card",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:1"
+  },
+  {
+   "fieldname": "replace_card",
+   "fieldtype": "Check",
+   "label": "Use This Layout for the Whole Card",
+   "default": "1",
+   "description": "Hides the board's own field rows; keeps the title, the footer and the card menu"
+  },
+  {
+   "fieldname": "title_field",
+   "fieldtype": "Select",
+   "label": "Title Field",
+   "description": "Shown as the card title instead of the board's title"
+  },
+  {
+   "fieldname": "column_break_card",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "show_name",
+   "fieldtype": "Check",
+   "label": "Show Document Name",
+   "default": "1"
+  },
+  {
+   "fieldname": "compact_numbers",
+   "fieldtype": "Check",
+   "label": "Compact Numbers",
+   "default": "1",
+   "description": "555K instead of 555,000.00; the full number shows on hover"
+  },
+  {
+   "fieldname": "show_stage_path",
+   "fieldtype": "Check",
+   "label": "Show Stage Path",
+   "default": "1",
+   "description": "A thin bar with every stage of the board: done, now, sent back, still ahead; dates on hover"
+  },
+  {
+   "fieldname": "stage_labels",
+   "fieldtype": "Small Text",
+   "label": "Stage Short Names",
+   "depends_on": "eval:doc.show_stage_path",
+   "description": "Optional, one per line: Stage=SHORT. Others are shortened on their own (Project Won = PW)"
+  },
+  {
+   "fieldname": "path_style",
+   "fieldtype": "Select",
+   "label": "Stage Path Style",
+   "options": "Dots\nBars",
+   "default": "Dots",
+   "depends_on": "eval:doc.show_stage_path"
+  },
+  {
+   "fieldname": "dedupe_actions",
+   "fieldtype": "Check",
+   "label": "Hide Buttons the Next Step Already Shows",
+   "default": "1"
+  },
+  {
+   "fieldname": "form_actions",
+   "fieldtype": "Check",
+   "label": "Show Buttons in the Form",
+   "default": "1",
+   "description": "The next step's button and the card buttons also show at the top of the form; several go under Actions"
+  },
+  {
+   "fieldname": "section_hero",
+   "fieldtype": "Section Break",
+   "label": "Hero Number",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:1",
+   "description": "The big number under the title, its share of a target, and a line under it"
+  },
+  {
+   "fieldname": "hero_field",
+   "fieldtype": "Select",
+   "label": "Number"
+  },
+  {
+   "fieldname": "hero_target",
+   "fieldtype": "Select",
+   "label": "Target"
+  },
+  {
+   "fieldname": "column_break_hero",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hero_target_label",
+   "fieldtype": "Data",
+   "label": "Target Label",
+   "default": "of target"
+  },
+  {
+   "fieldname": "hero_note",
+   "fieldtype": "Data",
+   "label": "Line Under It",
+   "description": "e.g. Cost {total_cost} \u00b7 margin {=doc.total - doc.total_cost}"
+  },
+  {
+   "fieldname": "section_next",
+   "fieldtype": "Section Break",
+   "label": "Next Step",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:1",
+   "description": "What the card asks for now: the first row whose condition holds"
+  },
+  {
+   "fieldname": "next_steps",
+   "fieldtype": "Table",
+   "label": "Steps",
+   "options": "Board Card Step"
+  },
+  {
+   "fieldname": "section_checklist",
+   "fieldtype": "Section Break",
+   "label": "Checklist",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:1",
+   "description": "Short \u2713 / \u25cb lines: what is done and what isn't"
+  },
+  {
+   "fieldname": "checklist",
+   "fieldtype": "Table",
+   "label": "Checks",
+   "options": "Board Card Check"
+  },
+  {
+   "fieldname": "section_fields",
+   "fieldtype": "Section Break",
+   "label": "Card Lines",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:1",
+   "description": "What each card shows, and where. Reload the board after saving."
+  },
+  {
+   "fieldname": "fields",
+   "fieldtype": "Table",
+   "label": "Lines",
+   "options": "Board Card Field"
+  },
+  {
+   "fieldname": "section_progress",
+   "fieldtype": "Section Break",
+   "label": "Progress Bar",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:1",
+   "description": "A thin bar showing Value as a share of Target: green from 100%, orange from 80%, red below"
+  },
+  {
+   "fieldname": "progress_value",
+   "fieldtype": "Select",
+   "label": "Value"
+  },
+  {
+   "fieldname": "progress_target",
+   "fieldtype": "Select",
+   "label": "Target"
+  },
+  {
+   "fieldname": "column_break_progress",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "progress_label",
+   "fieldtype": "Data",
+   "label": "Label",
+   "default": "of target"
+  },
+  {
+   "fieldname": "progress_title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "description": "With a title the bar becomes a box: the amount, what's left, and the bar"
+  },
+  {
+   "fieldname": "progress_secondary",
+   "fieldtype": "Select",
+   "label": "Second Value",
+   "description": "A part of the value shown darker in the bar, e.g. what's collected of what's invoiced"
+  },
+  {
+   "fieldname": "progress_secondary_label",
+   "fieldtype": "Data",
+   "label": "Second Label",
+   "default": "collected"
+  },
+  {
+   "fieldname": "progress_condition",
+   "fieldtype": "Small Text",
+   "label": "Only When",
+   "description": "eval:..."
+  },
+  {
+   "fieldname": "section_actions",
+   "fieldtype": "Section Break",
+   "label": "Card Buttons",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:1",
+   "description": "Buttons on the card; they act without opening the document"
+  },
+  {
+   "fieldname": "actions",
+   "fieldtype": "Table",
+   "label": "Buttons",
+   "options": "Board Card Action"
+  },
+  {
+   "fieldname": "section_rules",
+   "fieldtype": "Section Break",
+   "label": "Color Rules",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:1",
+   "description": "The first rule that matches colors the card's stripe; every match with a badge text adds that badge."
+  },
+  {
+   "fieldname": "rules",
+   "fieldtype": "Table",
+   "label": "Rules",
+   "options": "Board Card Rule"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "owner": "Administrator",
+ "modified_by": "Administrator",
+ "creation": "2026-10-14 13:40:00.000000",
+ "modified": "2026-10-14 19:30:00.000000",
+ "autoname": "field:reference_doctype",
+ "naming_rule": "By fieldname"
+}

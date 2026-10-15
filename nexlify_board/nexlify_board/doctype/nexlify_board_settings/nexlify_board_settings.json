@@ -1,0 +1,33 @@
+{
+ "doctype": "DocType",
+ "name": "Nexlify Board Settings",
+ "module": "Nexlify Board",
+ "issingle": 1,
+ "engine": "InnoDB",
+ "modified": "2026-10-13 17:00:00.000000",
+ "field_order": [
+  "intro",
+  "doctypes"
+ ],
+ "fields": [
+  {
+   "fieldname": "intro",
+   "fieldtype": "HTML",
+   "options": "<p class=\"text-muted\">DocTypes with Transition Rules get the move check and the Flow on their own. Add a DocType here to get them without rules, or to add Flow steps from another app.</p>"
+  },
+  {
+   "fieldname": "doctypes",
+   "fieldtype": "Table",
+   "options": "Nexlify Board DocType",
+   "label": "DocTypes"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  }
+ ]
+}

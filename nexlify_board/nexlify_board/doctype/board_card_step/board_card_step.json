@@ -1,0 +1,68 @@
+{
+ "doctype": "DocType",
+ "name": "Board Card Step",
+ "module": "Nexlify Board",
+ "custom": 0,
+ "istable": 1,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "condition",
+  "text",
+  "button_label",
+  "action",
+  "tone"
+ ],
+ "fields": [
+  {
+   "fieldname": "condition",
+   "fieldtype": "Small Text",
+   "label": "When",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 3,
+   "description": "eval:... \u2014 the first step whose condition holds is shown"
+  },
+  {
+   "fieldname": "text",
+   "fieldtype": "Small Text",
+   "label": "Next Step",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 3,
+   "description": "May use {field} and {=expression}"
+  },
+  {
+   "fieldname": "button_label",
+   "fieldtype": "Data",
+   "label": "Button",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "action",
+   "fieldtype": "Small Text",
+   "label": "Action",
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "Same forms as Card Buttons"
+  },
+  {
+   "fieldname": "tone",
+   "fieldtype": "Select",
+   "label": "Tone",
+   "options": "Warning\nPending\nInfo\nSuccess\nNeutral",
+   "default": "Warning",
+   "in_list_view": 1,
+   "columns": 1
+  }
+ ],
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "owner": "Administrator",
+ "modified_by": "Administrator",
+ "creation": "2026-10-14 18:00:00.000000",
+ "modified": "2026-10-14 18:50:00.000000"
+}

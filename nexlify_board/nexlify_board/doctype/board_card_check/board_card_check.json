@@ -1,0 +1,47 @@
+{
+ "doctype": "DocType",
+ "name": "Board Card Check",
+ "module": "Nexlify Board",
+ "custom": 0,
+ "istable": 1,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "label",
+  "done_when",
+  "only_when"
+ ],
+ "fields": [
+  {
+   "fieldname": "label",
+   "fieldtype": "Small Text",
+   "label": "Label",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 3,
+   "description": "May use {field} and {=expression}"
+  },
+  {
+   "fieldname": "done_when",
+   "fieldtype": "Small Text",
+   "label": "Done When",
+   "in_list_view": 1,
+   "columns": 4
+  },
+  {
+   "fieldname": "only_when",
+   "fieldtype": "Small Text",
+   "label": "Only When",
+   "in_list_view": 1,
+   "columns": 3
+  }
+ ],
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "owner": "Administrator",
+ "modified_by": "Administrator",
+ "creation": "2026-10-14 18:00:00.000000",
+ "modified": "2026-10-14 18:10:00.000000"
+}

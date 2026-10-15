@@ -1,0 +1,78 @@
+{
+ "doctype": "DocType",
+ "name": "Board Card Field",
+ "module": "Nexlify Board",
+ "custom": 0,
+ "istable": 1,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "track_changes": 0,
+ "field_order": [
+  "fieldname",
+  "label",
+  "show_as",
+  "position",
+  "badge_colors",
+  "condition"
+ ],
+ "fields": [
+  {
+   "fieldname": "fieldname",
+   "fieldtype": "Select",
+   "label": "Field",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "label": "Label",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "show_as",
+   "fieldtype": "Select",
+   "label": "Show As",
+   "options": "Subtitle\nBadge\nNumber\nDate\nUser\nText",
+   "default": "Badge",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "position",
+   "fieldtype": "Select",
+   "label": "Position",
+   "options": "Top\nMiddle\nBottom",
+   "default": "Top",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "badge_colors",
+   "fieldtype": "Small Text",
+   "label": "Badge Colors",
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "One per line: Value=color (gray, blue, green, orange, red, yellow, purple)"
+  },
+  {
+   "fieldname": "condition",
+   "fieldtype": "Small Text",
+   "label": "Only When",
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "e.g. eval:doc.status == \"Open\""
+  }
+ ],
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "owner": "Administrator",
+ "modified_by": "Administrator",
+ "creation": "2026-10-14 13:40:00.000000",
+ "modified": "2026-10-14 18:10:00.000000"
+}

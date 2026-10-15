@@ -1,0 +1,59 @@
+{
+ "doctype": "DocType",
+ "name": "Board Card Action",
+ "module": "Nexlify Board",
+ "custom": 0,
+ "istable": 1,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "label",
+  "action",
+  "condition",
+  "style"
+ ],
+ "fields": [
+  {
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "label": "Label",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "action",
+   "fieldtype": "Small Text",
+   "label": "Action",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 4,
+   "description": "form \u00b7 route:/app/... \u00b7 map:dotted.method \u00b7 call:method?arg={name} \u00b7 fields:a,b \u00b7 a registered action name"
+  },
+  {
+   "fieldname": "condition",
+   "fieldtype": "Small Text",
+   "label": "Only When",
+   "in_list_view": 1,
+   "columns": 3,
+   "description": "e.g. eval:doc.status == \"Open\""
+  },
+  {
+   "fieldname": "style",
+   "fieldtype": "Select",
+   "label": "Style",
+   "options": "Default\nPrimary",
+   "default": "Default",
+   "in_list_view": 1,
+   "columns": 1
+  }
+ ],
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "owner": "Administrator",
+ "modified_by": "Administrator",
+ "creation": "2026-10-14 15:30:00.000000",
+ "modified": "2026-10-14 18:10:00.000000"
+}

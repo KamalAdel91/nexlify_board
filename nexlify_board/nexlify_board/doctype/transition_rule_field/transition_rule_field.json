@@ -1,0 +1,41 @@
+{
+ "doctype": "DocType",
+ "name": "Transition Rule Field",
+ "module": "Nexlify Board",
+ "istable": 1,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "modified": "2026-10-13 17:00:00.000000",
+ "field_order": [
+  "fieldname",
+  "label",
+  "condition"
+ ],
+ "fields": [
+  {
+   "fieldname": "fieldname",
+   "fieldtype": "Select",
+   "label": "Field",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "label": "Label",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "condition",
+   "fieldtype": "Data",
+   "label": "Only When",
+   "in_list_view": 1,
+   "columns": 4,
+   "description": "Python expression, e.g. doc.priority == \"High\". Empty means always."
+  }
+ ],
+ "permissions": []
+}
