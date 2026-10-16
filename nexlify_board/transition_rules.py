@@ -375,6 +375,32 @@ def mandatory_missing(doc, data, meta):
 	return out
 
 
+def fetched_values(doc, meta, field, value):
+	"""The fields fetched from `field` (Fetch From "field.x") as the save will set them once
+	`field` is `value`: a condition that reads one (the stage's type or order, say) sees the
+	stage the move goes to, not the one the document is leaving."""
+	df = meta.get_field(field)
+	if not df or df.fieldtype != "Link" or not df.options:
+		return {}
+	fetched = [
+		f
+		for f in meta.fields
+		if f.fetch_from
+		and f.fetch_from.count(".") == 1
+		and f.fetch_from.split(".")[0] == field
+		and not (f.fetch_if_empty and not is_empty(doc.get(f.fieldname), f))
+	]
+	if not fetched:
+		return {}
+	sources = sorted({f.fetch_from.split(".")[1] for f in fetched})
+	try:
+		row = (frappe.db.get_value(df.options, value, sources, as_dict=True) if value else None) or {}
+	except Exception:
+		# a Fetch From the linked DocType can't answer: the save will say so
+		return {}
+	return {f.fieldname: row.get(f.fetch_from.split(".")[1]) for f in fetched}
+
+
 def _dry_run(doc, skip_required=False):
 	"""Run every validation a save would run, without saving. Returns None or {message, title}.
 	Stops before the database write, so on_update / after-save code (emails, jobs) never runs.
@@ -442,6 +468,8 @@ def check_move(doctype: str, names, field: str, to: str, values=None, dry_run: i
 			if meta.get_field(key) and is_empty(data.get(key), meta.get_field(key)):
 				data[key] = value
 		data[field] = to
+		fetched = fetched_values(doc, meta, field, to)
+		data.update(fetched)
 		need = missing_fields(doc, active, data, meta)
 		for f in need:
 			if f not in candidates:
@@ -451,6 +479,7 @@ def check_move(doctype: str, names, field: str, to: str, values=None, dry_run: i
 		typed = {k: data[k] for k in values if meta.get_field(k) and is_empty(doc.get(k), meta.get_field(k))}
 		doc.update(typed)
 		doc.set(field, to)
+		doc.update(fetched)
 		for f in mandatory_missing(doc, data, meta):
 			if f not in need:
 				need.append(f)
@@ -691,6 +720,7 @@ def get_flow(doctype: str, name: str, field: str | None = None, to: str | None =
 			item["state"] = "target" if stage == target else "ahead"
 			data = frappe._dict(doc.as_dict())
 			data[field] = stage
+			data.update(fetched_values(doc, meta, field, stage))
 			# rules on leaving the current stage (To empty) belong to the move being made
 			active = [
 				r

@@ -475,7 +475,7 @@
 					<i style="display:block;height:100%;width:${Math.max(w(v) - w(sec), 0)}%;background:var(--blue-500, #2490ef)"></i></div>
 				${layout.progress_secondary ? `<div style="font-size:11px;color:${MUTED};margin-top:4px">${esc(fmt(sec))} ${esc(__(layout.progress_secondary_label || "collected"))}</div>` : ""}`;
 			metrics.appendChild(box);
-		} else if (pv && pt && flt(doc[pt]) > 0 && !layout.progress_title) {
+		} else if (pv && pt && flt(doc[pt]) > 0 && !layout.progress_title && test(layout.progress_condition, doc)) {
 			const pct = (flt(doc[pv]) / flt(doc[pt])) * 100;
 			const tone = pct >= 100 ? TONE.green : pct >= 80 ? TONE.orange : TONE.red;
 			const p = make("div");
