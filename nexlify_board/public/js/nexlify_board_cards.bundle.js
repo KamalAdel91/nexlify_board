@@ -411,6 +411,7 @@
 		el.style.borderLeft = stripe ? `3px solid ${stripe.color}` : card.color ? `3px solid ${card.color}` : "";
 
 		const lines = make("div", "", "display:flex;flex-direction:column;gap:2px");
+		const subtitles = [];
 		const badges = make("div", "", "display:flex;flex-wrap:wrap;gap:4px");
 		const numbers = make("div", "", "display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:6px 12px");
 		const bottom = [];
@@ -436,11 +437,26 @@
 			} else if (f.show_as === "User") {
 				bottom.push(user_avatar(page, v, label));
 			} else {
-				const s = make("div", "", `font-size:12px;color:${MUTED};white-space:nowrap;overflow:hidden;text-overflow:ellipsis`);
+				// a class per kind, so an app can style its own boards' lines
+				// (a subtitle leaves the body for the title: added, so a repaint takes it away first)
+				const s = make("div", f.show_as === "Subtitle" ? "nx-card-subtitle nx-card-added" : "nx-card-line",
+					`font-size:12px;color:${MUTED};white-space:nowrap;overflow:hidden;text-overflow:ellipsis`);
 				const html = frappe.format(v, df, { inline: true }, doc);
 				s.innerHTML = f.show_as === "Subtitle" ? html : `${esc(label)}: <span style="color:${STRONG}">${html}</span>`;
-				lines.appendChild(s);
+				// a subtitle goes under the card's title; the other lines with the card's details
+				if (f.show_as === "Subtitle" && title_row) subtitles.push(s);
+				else lines.appendChild(s);
 			}
+		});
+
+		// under the title, after the document's name when it shows
+		let anchor = title_row;
+		if (anchor && anchor.nextElementSibling && anchor.nextElementSibling.classList.contains("nx-card-added")) {
+			anchor = anchor.nextElementSibling;
+		}
+		subtitles.forEach((s) => {
+			anchor.insertAdjacentElement("afterend", s);
+			anchor = s;
 		});
 
 		const top = make("div", "", "display:flex;flex-direction:column;gap:6px");
@@ -648,6 +664,10 @@
 			return {
 				...raw,
 				__nx_cards: true,
+				// these cards draw once their data arrives, after the column measured them: a column
+				// that redraws its visible window as it scrolls would measure them short and jump.
+				// It draws every loaded card once instead; more still load as it scrolls.
+				options: { ...(raw.options || {}), virtualization: false },
 				callbacks: {
 					...(raw.callbacks || {}),
 					onAfterCardMove: (move) => {
