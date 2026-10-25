@@ -1,7 +1,7 @@
 """Helpers for installing and wiring Nexlify Board on a site, run with `bench execute`.
 
 	bench --site SITE execute nexlify_board.setup.site_needs_board
-	bench --site SITE execute nexlify_board.setup.add_doctype --kwargs "{'doctype': 'Opportunity', 'flow_method': 'eye.flow'}"
+	bench --site SITE execute nexlify_board.setup.add_doctype --kwargs "{'doctype': 'Opportunity', 'flow_method': 'my_app.board.flow'}"
 	bench --site SITE execute nexlify_board.setup.remove_rules --kwargs "{'doctype': 'Opportunity'}"
 """
 
