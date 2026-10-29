@@ -1,0 +1,29 @@
+{
+ "doctype": "DocType",
+ "name": "Transition Rule User",
+ "module": "Nexlify Board",
+ "istable": 1,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "creation": "2026-10-29 03:32:08.546419",
+ "modified": "2026-10-29 03:32:08.546419",
+ "modified_by": "Administrator",
+ "owner": "Administrator",
+ "field_order": [
+  "user"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "reqd": 1,
+   "in_list_view": 1
+  }
+ ],
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "ASC",
+ "states": []
+}

@@ -24,11 +24,15 @@ class TransitionRule(Document):
 				except SyntaxError as e:
 					frappe.throw(_("Row {0}: the condition is not a valid Python expression ({1})").format(row.idx, e.msg))
 
-		if not self.from_value and not self.to_value:
-			frappe.throw(_("Set From, To, or both."))
+		if not self.from_value and not self.to_value and not self.direction:
+			frappe.throw(_("Set From, To, both, or a Direction."))
+		self.validate_user_field(meta)
 		self.confirm_view = (self.confirm_view or "").strip()
-		if not self.required_fields and not (self.condition or "").strip() and not self.confirm_view:
-			frappe.throw(_("Add a Required Field, a Condition or a Confirm View, or the rule does nothing."))
+		who = self.allowed_roles or self.allowed_users or self.user_field
+		if not who and not self.required_fields and not (self.condition or "").strip() and not self.confirm_view:
+			frappe.throw(
+				_("Add who may move, a Required Field, a Condition or a Confirm View, or the rule does nothing.")
+			)
 		if self.condition:
 			self.condition = self.condition.strip()
 			try:
@@ -40,6 +44,14 @@ class TransitionRule(Document):
 			frappe.throw(_("An Action shows when the Condition fails, so it needs a Condition."))
 
 		self.title = f"{_(self.reference_doctype)}: {self.from_value or _('Any')} → {self.to_value or _('Any')}"
+
+	def validate_user_field(self, meta):
+		"""The user field names a user: a Link to User, or Created By."""
+		if not self.user_field or self.user_field == "owner":
+			return
+		df = meta.get_field(self.user_field)
+		if not df or df.fieldtype != "Link" or df.options != "User":
+			frappe.throw(_("{0} is not a User field of {1}.").format(frappe.bold(self.user_field), _(self.reference_doctype)))
 
 	def validate_stage_values(self, stage):
 		"""Catch typos: a value the stage field can't hold would make the rule never fire."""

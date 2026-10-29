@@ -6,11 +6,20 @@ DocType and name a method that gives the Flow its steps, and a Transition Rule c
 method that shows a screen before a move (Confirm View). Those methods can be whitelisted
 Python or API Server Scripts.
 
-Transition Rules: what a document needs before its stage field moves.
+Transition Rules: what a document needs before its stage field moves, and who may move it.
 
 A rule fires when the stage field leaves `From` (empty = any value) for `To` (empty = any
 value). It can ask for fields, and it can ask for a Condition (a Python expression) to be
 true; a failed condition shows the rule's Message with an optional Action button.
+
+Who may move (Allowed Roles, Allowed Users, or the user a field of the document names): checked on
+every save before the document's own validation (doc_events "*" before_validate), so it judges
+the stage the user asked for even when the document's controller moves it on (e.g. to the stage
+an action leads to). Rules that match a move must all let the user make it; within a rule, any
+of its roles, users or its user field is enough. A rule with none of them holds no one. A save
+made by code for the system (doc.flags.ignore_permissions) and the rule's bypass role are not
+held, nor is a new document unless the rule says Apply on Create. Direction narrows a rule to
+moves forward or backward in the board's column order.
 
 The rule is checked on every save (doc_events "*" validate), so Kanban drags, List bulk
 edits, the API, Data Import and scripts all obey it. The desk asks the same functions
@@ -38,6 +47,10 @@ SETTINGS_KEY = "nexlify_board_settings"
 
 class TransitionRuleError(frappe.ValidationError):
 	pass
+
+
+class MoveNotAllowed(TransitionRuleError):
+	"""The user may not make this move (the rule's Who May Move)."""
 
 
 def clear_cache():
@@ -104,14 +117,23 @@ def _load_rules():
 		)
 	columns = {c.lower() for c in frappe.db.get_table_columns("Transition Rule")}
 	wanted = ["name", "creation", "reference_doctype", "stage_field", "from_value", "to_value", "message", "bypass_role", "open_form"]
-	optional = ("condition", "action", "action_label", "step_label", "waiting_on", "sequence", "confirm_view", "confirm_label")
+	optional = ("condition", "action", "action_label", "step_label", "waiting_on", "sequence", "confirm_view", "confirm_label",
+				"user_field", "direction", "apply_on_create", "refusal_message")
 	wanted += [c for c in optional if c in columns]  # before migrate
 	out = {}
 	rules = frappe.get_all("Transition Rule", filters={"enabled": 1}, fields=wanted)
 	rules.sort(key=lambda r: (cint(r.get("sequence")), r.creation))  # creation: the order they were added
+	who = {}
+	for child, column in (("Transition Rule Role", "role"), ("Transition Rule User", "user")):
+		if not frappe.db.table_exists(child):  # before migrate
+			continue
+		for row in frappe.get_all(child, filters={"parenttype": "Transition Rule"}, fields=["parent", column]):
+			who.setdefault(row.parent, {}).setdefault(column, []).append(row[column])
 	for rule in rules:
 		rule.fields = fields.get(rule.name, [])
 		rule.condition = (rule.get("condition") or "").strip()
+		rule.allowed_roles = who.get(rule.name, {}).get("role", [])
+		rule.allowed_users = who.get(rule.name, {}).get("user", [])
 		out.setdefault(rule.reference_doctype, []).append(rule)
 	return out
 
@@ -245,6 +267,92 @@ def condition_message(doc, field, rule):
 		message += "<br><br>" + action_button(rule.action, rule.get("action_label"), doc.doctype, doc.name)
 	title = _("Cannot move to {0}").format(stage) if stage else _("Cannot move")
 	return message, title
+
+
+# ---------- who may move ----------
+
+
+def holds_who(rule):
+	return bool(rule.get("allowed_roles") or rule.get("allowed_users") or rule.get("user_field"))
+
+
+def moving_way(rule, doctype, field, old, new):
+	"""The move goes the rule's Direction (any, when it has none) in the board's column order."""
+	if not rule.get("direction"):
+		return True
+	order = stage_order(doctype, field)
+	if cstr(old) not in order or cstr(new) not in order:
+		return False
+	forward = order.index(cstr(new)) > order.index(cstr(old))
+	return forward if rule.direction == "Forward" else not forward
+
+
+def may_move(rule, doc, user, roles):
+	if user in (rule.get("allowed_users") or []) or roles & set(rule.get("allowed_roles") or []):
+		return True
+	return bool(rule.get("user_field")) and cstr(doc.get(rule.user_field)) == user
+
+
+def who_refuses(doc, field, old, new, user=None):
+	"""The first rule that holds this user from moving `doc`'s `field` from `old` to `new`, or None."""
+	user = user or frappe.session.user
+	if user == "Administrator" or cstr(old) == cstr(new):
+		return None
+	rules = [r for r in get_rules(doc.doctype) if r.stage_field == field and holds_who(r)]
+	if not rules:
+		return None
+	roles = set(frappe.get_roles(user))
+	for rule in applicable_rules(rules, field, old, new):
+		if old in (None, "") and not cint(rule.get("apply_on_create")):
+			continue
+		if not moving_way(rule, doc.doctype, field, old, new):
+			continue
+		if not may_move(rule, doc, user, roles):
+			return rule
+	return None
+
+
+def refusal(doc, field, old, new, rule):
+	"""(message, title) for a move the rule holds."""
+	if rule.get("refusal_message"):
+		return _(rule.refusal_message), _("Not allowed")
+	who = [frappe.bold(_(r)) for r in rule.allowed_roles] + [frappe.bold(frappe.utils.get_fullname(u)) for u in rule.allowed_users]
+	if rule.get("user_field"):
+		label = _("Created By") if rule.user_field == "owner" else _(doc.meta.get_label(rule.user_field))
+		who.append(_("the document's {0}").format(frappe.bold(label)))
+	return (
+		_("You can't move {0} from {1} to {2}. Who can: {3}.").format(
+			frappe.bold(doc.get_title() or doc.name),
+			frappe.bold(_(cstr(old)) or _("nothing")),
+			frappe.bold(_(cstr(new))),
+			_(", ").join(who) or _("no one"),
+		),
+		_("Not allowed"),
+	)
+
+
+def before_validate(doc, method=None):
+	"""doc_events "*" before_validate: the user may make the move (before the document's own
+	validation can move its stage on)."""
+	if (
+		frappe.flags.in_install
+		or frappe.flags.in_migrate
+		or frappe.flags.in_patch
+		or frappe.flags.ignore_transition_rules
+		or doc.flags.ignore_transition_rules
+		or doc.flags.ignore_permissions  # code saving for the system, not the user
+	):
+		return
+	rules = get_rules(doc.doctype)
+	if not rules:
+		return
+	before = doc.get_doc_before_save()
+	for field in {r.stage_field for r in rules if holds_who(r)}:
+		old, new = (before.get(field) if before else None), doc.get(field)
+		rule = who_refuses(doc, field, old, new)
+		if rule:
+			message, title = refusal(doc, field, old, new, rule)
+			frappe.throw(message, MoveNotAllowed, title=title)
 
 
 # ---------- the save check ----------
@@ -460,6 +568,13 @@ def check_move(doctype: str, names, field: str, to: str, values=None, dry_run: i
 		doc.check_permission("read")
 		titles[name] = doc.get_title()
 		old = doc.get(field)
+		# who may move comes first: no field the popup could ask for changes it
+		holder = who_refuses(doc, field, old, to)
+		if holder:
+			message, title = refusal(doc, field, old, to, holder)
+			errors[name] = {"message": message, "title": title, "rule": holder.name}
+			docs[name] = []
+			continue
 		active = applicable_rules(rules, field, old, to)
 		open_form = open_form or any(cint(r.get("open_form")) for r in active)
 

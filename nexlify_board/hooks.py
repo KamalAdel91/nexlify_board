@@ -17,6 +17,11 @@ app_include_js = [
 
 doctype_js = {"Kanban Board": "public/js/kanban_board_any_field.js"}
 
-doc_events = {"*": {"validate": "nexlify_board.transition_rules.validate"}}
+doc_events = {
+	"*": {
+		"before_validate": "nexlify_board.transition_rules.before_validate",
+		"validate": "nexlify_board.transition_rules.validate",
+	}
+}
 
 boot_session = "nexlify_board.board_cards.boot"

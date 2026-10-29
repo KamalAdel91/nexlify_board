@@ -7,7 +7,7 @@
  "title_field": "title",
  "track_changes": 1,
  "engine": "InnoDB",
- "modified": "2026-10-13 17:00:00.000000",
+ "modified": "2026-10-29 03:32:08.546419",
  "field_order": [
   "enabled",
   "reference_doctype",
@@ -15,6 +15,14 @@
   "column_break_from",
   "from_value",
   "to_value",
+  "section_who",
+  "allowed_roles",
+  "allowed_users",
+  "user_field",
+  "column_break_who",
+  "direction",
+  "apply_on_create",
+  "refusal_message",
   "section_required",
   "required_fields",
   "section_condition",
@@ -78,6 +86,53 @@
    "reqd": 0,
    "in_list_view": 1,
    "description": "Leave empty for any value: the rule then fires whenever the document leaves From."
+  },
+  {
+   "fieldname": "section_who",
+   "fieldtype": "Section Break",
+   "label": "Who May Move",
+   "description": "Empty: anyone who may save the document. Filled: only these people make the move (any of them). System moves made by code (saved with ignore_permissions) are not held."
+  },
+  {
+   "fieldname": "allowed_roles",
+   "fieldtype": "Table MultiSelect",
+   "label": "Allowed Roles",
+   "options": "Transition Rule Role"
+  },
+  {
+   "fieldname": "allowed_users",
+   "fieldtype": "Table MultiSelect",
+   "label": "Allowed Users",
+   "options": "Transition Rule User"
+  },
+  {
+   "fieldname": "user_field",
+   "fieldtype": "Select",
+   "label": "Or the Document's Own User",
+   "description": "A User field of the document (or Created By): the user it names may make the move too, e.g. a salesperson their own documents."
+  },
+  {
+   "fieldname": "column_break_who",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "direction",
+   "fieldtype": "Select",
+   "label": "Direction",
+   "options": "\nForward\nBackward",
+   "description": "Empty: any move. Forward or Backward: only moves that way in the board's column order (or the field's options)."
+  },
+  {
+   "fieldname": "apply_on_create",
+   "fieldtype": "Check",
+   "label": "Apply on Create",
+   "description": "Also hold a new document made straight in a stage (an empty From). Off: a new document isn't held, so Data Import and new records work."
+  },
+  {
+   "fieldname": "refusal_message",
+   "fieldtype": "Small Text",
+   "label": "Refusal Message",
+   "description": "Shown to whoever may not make the move. Empty: it says who may."
   },
   {
    "fieldname": "section_required",
@@ -190,7 +245,7 @@
    "fieldtype": "Link",
    "label": "Role That Can Skip",
    "options": "Role",
-   "description": "Users with this role can move documents without the required fields, e.g. for imports of old data."
+   "description": "Users with this role are held by none of the rule: who may move, the required fields and the Condition (e.g. for imports of old data)."
   },
   {
    "fieldname": "title",
