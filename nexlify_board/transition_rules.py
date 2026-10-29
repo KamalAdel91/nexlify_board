@@ -131,7 +131,7 @@ def _load_rules():
 	columns = {c.lower() for c in frappe.db.get_table_columns("Transition Rule")}
 	wanted = ["name", "creation", "reference_doctype", "stage_field", "from_value", "to_value", "message", "bypass_role", "open_form"]
 	optional = ("condition", "action", "action_label", "step_label", "waiting_on", "sequence", "confirm_view", "confirm_label",
-				"user_field", "direction", "apply_on_create", "refusal_message", "no_one")
+				"user_field", "direction", "apply_on_create", "refusal_message", "no_one", "carry_forward", "carry_until")
 	wanted += [c for c in optional if c in columns]  # before migrate
 	out = {}
 	rules = frappe.get_all("Transition Rule", filters={"enabled": 1}, fields=wanted)
@@ -157,7 +157,7 @@ def applicable_rules(rules, field, old, new):
 	for rule in rules:
 		if rule.stage_field != field or cstr(old) == cstr(new):
 			continue
-		if rule.to_value and cstr(new) != cstr(rule.to_value):
+		if rule.to_value and cstr(new) != cstr(rule.to_value) and not skipped_over(rule, field, old, new):
 			continue
 		if rule.from_value and cstr(old) != cstr(rule.from_value):
 			continue
@@ -167,6 +167,19 @@ def applicable_rules(rules, field, old, new):
 				continue
 		out.append(rule)
 	return out
+
+
+def skipped_over(rule, field, old, new):
+	"""The move goes past the rule's stage, forward in the board's order, to a stage no later than its Up
+	To, and the rule holds for that too (Also When Skipped Over)."""
+	if not cint(rule.get("carry_forward")) or old is None:
+		return False
+	order = stage_order(rule.reference_doctype, field)
+	stage, until = cstr(rule.to_value), cstr(rule.get("carry_until"))
+	if any(v not in order for v in (cstr(old), cstr(new), stage)) or (until and until not in order):
+		return False
+	at, to = order.index(stage), order.index(cstr(new))
+	return order.index(cstr(old)) < at < to and (not until or to <= order.index(until))
 
 
 def is_empty(value, df=None):

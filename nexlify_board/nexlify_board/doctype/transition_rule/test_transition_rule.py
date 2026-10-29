@@ -96,6 +96,17 @@ class TestWhoMayMove(unittest.TestCase):  # no test records: Transition Rule lin
 		with self.assertRaises(MoveNotAllowed):
 			self.move(todo, "Open")
 
+	def test_a_stage_skipped_over_still_asks_for_its_rule(self):
+		# ToDo's order: Open, Closed, Cancelled; Closed's rule held too going past it (Also When Skipped Over)
+		self.rule(no_one=1, carry_forward=1)
+		todo = self.todo()
+		with self.assertRaises(MoveNotAllowed):
+			self.move(todo, "Cancelled")
+		# up to Closed only: a move past that isn't held
+		frappe.db.set_value("Transition Rule", {"reference_doctype": "ToDo"}, "carry_until", "Closed")
+		clear_cache()
+		self.move(todo, "Cancelled")
+
 	def test_no_one_holds_administrator_too(self):
 		self.rule(no_one=1)
 		todo = self.todo()
