@@ -420,6 +420,13 @@ async function ask_for_move(doctype, names, field, to, allow_form = true, dry_ru
 		const show_needed = () => {
 			const need = needed();
 			for (const f of asked) {
+				// a field the rules ask for shows: its own Depends On may read a field the popup hasn't (the
+				// form's hidden flags), which would keep it hidden
+				const control = dialog.fields_dict[f];
+				if (need.has(f) && control) {
+					control.df.depends_on = "";
+					control.df.hidden_due_to_dependency = false;
+				}
 				dialog.set_df_property(f, "hidden", need.has(f) ? 0 : 1);
 				dialog.set_df_property(f, "reqd", need.has(f) ? 1 : 0);
 			}
