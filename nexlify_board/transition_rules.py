@@ -16,7 +16,8 @@ Who may move (Allowed Roles, Allowed Users, or the user a field of the document 
 every save before the document's own validation (doc_events "*" before_validate), so it judges
 the stage the user asked for even when the document's controller moves it on (e.g. to the stage
 an action leads to). Rules that match a move must all let the user make it; within a rule, any
-of its roles, users or its user field is enough. A rule with none of them holds no one. A save
+of its roles, users or its user field is enough (Administrator by the roles it has, like anyone). A rule
+with none of them holds no one; one marked No One holds everyone. A save
 made by code for the system (doc.flags.ignore_permissions) and the rule's bypass role are not
 held, nor is a new document unless the rule says Apply on Create. Direction narrows a rule to
 moves forward or backward in the board's column order.
@@ -130,7 +131,7 @@ def _load_rules():
 	columns = {c.lower() for c in frappe.db.get_table_columns("Transition Rule")}
 	wanted = ["name", "creation", "reference_doctype", "stage_field", "from_value", "to_value", "message", "bypass_role", "open_form"]
 	optional = ("condition", "action", "action_label", "step_label", "waiting_on", "sequence", "confirm_view", "confirm_label",
-				"user_field", "direction", "apply_on_create", "refusal_message")
+				"user_field", "direction", "apply_on_create", "refusal_message", "no_one")
 	wanted += [c for c in optional if c in columns]  # before migrate
 	out = {}
 	rules = frappe.get_all("Transition Rule", filters={"enabled": 1}, fields=wanted)
@@ -285,7 +286,9 @@ def condition_message(doc, field, rule):
 
 
 def holds_who(rule):
-	return bool(rule.get("allowed_roles") or rule.get("allowed_users") or rule.get("user_field"))
+	return bool(
+		cint(rule.get("no_one")) or rule.get("allowed_roles") or rule.get("allowed_users") or rule.get("user_field")
+	)
 
 
 def moving_way(rule, doctype, field, old, new):
@@ -300,6 +303,8 @@ def moving_way(rule, doctype, field, old, new):
 
 
 def may_move(rule, doc, user, roles):
+	if cint(rule.get("no_one")):
+		return False
 	if user in (rule.get("allowed_users") or []) or roles & set(rule.get("allowed_roles") or []):
 		return True
 	return bool(rule.get("user_field")) and cstr(doc.get(rule.user_field)) == user
@@ -308,7 +313,7 @@ def may_move(rule, doc, user, roles):
 def who_refuses(doc, field, old, new, user=None):
 	"""The first rule that holds this user from moving `doc`'s `field` from `old` to `new`, or None."""
 	user = user or frappe.session.user
-	if user == "Administrator" or cstr(old) == cstr(new):
+	if cstr(old) == cstr(new):
 		return None
 	rules = [r for r in get_rules(doc.doctype) if r.stage_field == field and holds_who(r)]
 	if not rules:
@@ -328,6 +333,10 @@ def refusal(doc, field, old, new, rule):
 	"""(message, title) for a move the rule holds."""
 	if rule.get("refusal_message"):
 		return _(rule.refusal_message), _("Not allowed")
+	if cint(rule.get("no_one")):
+		return _("No one moves {0} to {1}: it gets there on its own.").format(
+			frappe.bold(doc.get_title() or doc.name), frappe.bold(_(cstr(new)))
+		), _("Not allowed")
 	who = [frappe.bold(_(r)) for r in rule.allowed_roles] + [frappe.bold(frappe.utils.get_fullname(u)) for u in rule.allowed_users]
 	if rule.get("user_field"):
 		label = _("Created By") if rule.user_field == "owner" else _(doc.meta.get_label(rule.user_field))

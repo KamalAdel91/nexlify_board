@@ -28,7 +28,7 @@ class TransitionRule(Document):
 			frappe.throw(_("Set From, To, both, or a Direction."))
 		self.validate_user_field(meta)
 		self.confirm_view = (self.confirm_view or "").strip()
-		who = self.allowed_roles or self.allowed_users or self.user_field
+		who = self.no_one or self.allowed_roles or self.allowed_users or self.user_field
 		if not who and not self.required_fields and not (self.condition or "").strip() and not self.confirm_view:
 			frappe.throw(
 				_("Add who may move, a Required Field, a Condition or a Confirm View, or the rule does nothing.")

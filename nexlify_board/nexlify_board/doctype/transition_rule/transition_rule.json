@@ -7,7 +7,7 @@
  "title_field": "title",
  "track_changes": 1,
  "engine": "InnoDB",
- "modified": "2026-10-29 03:32:08.546419",
+ "modified": "2026-10-29 16:09:42.706656",
  "field_order": [
   "enabled",
   "reference_doctype",
@@ -16,6 +16,7 @@
   "from_value",
   "to_value",
   "section_who",
+  "no_one",
   "allowed_roles",
   "allowed_users",
   "user_field",
@@ -91,7 +92,13 @@
    "fieldname": "section_who",
    "fieldtype": "Section Break",
    "label": "Who May Move",
-   "description": "Empty: anyone who may save the document. Filled: only these people make the move (any of them). System moves made by code (saved with ignore_permissions) are not held."
+   "description": "Empty: anyone who may save the document. Filled: only these people make the move (any of them), Administrator too by the roles it has. No One: nobody. System moves made by code (saved with ignore_permissions) are not held."
+  },
+  {
+   "fieldname": "no_one",
+   "fieldtype": "Check",
+   "label": "No One",
+   "description": "No user makes this move, whatever their roles: only code saving for the system (ignore_permissions)."
   },
   {
    "fieldname": "allowed_roles",

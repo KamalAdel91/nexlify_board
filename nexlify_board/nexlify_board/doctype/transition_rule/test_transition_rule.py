@@ -96,6 +96,12 @@ class TestWhoMayMove(unittest.TestCase):  # no test records: Transition Rule lin
 		with self.assertRaises(MoveNotAllowed):
 			self.move(todo, "Open")
 
+	def test_no_one_holds_administrator_too(self):
+		self.rule(no_one=1)
+		todo = self.todo()
+		with self.assertRaises(MoveNotAllowed):
+			self.move(todo, "Closed", user="Administrator")
+
 	def test_code_saving_for_the_system_and_new_documents_are_not_held(self):
 		self.rule(to_value="Closed", allowed_roles=[{"role": "System Manager"}])
 		self.todo(status="Closed")  # new: Apply on Create is off
