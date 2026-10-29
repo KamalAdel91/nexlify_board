@@ -522,8 +522,19 @@ function show_errors(doctype, check) {
 		show_flow(doctype, names[0], { to: check.to, error: rule ? null : message });
 		return;
 	}
+	if (names.length === 1) {
+		// one document: its message, with one button to open it (the rule's own, or Open Form)
+		const { message, title } = check.errors[names[0]];
+		const has_action = /data-nx-action=/.test(message || "");
+		frappe.msgprint({
+			title: title || __("Not moved"),
+			indicator: "red",
+			message: has_action ? message : `${message}<p style="margin-top:12px">${open_btn(names[0])}</p>`,
+		});
+		return;
+	}
 	frappe.msgprint({
-		title: names.length === 1 ? check.errors[names[0]].title || __("Not moved") : __("Not moved"),
+		title: __("Not moved"),
 		indicator: "red",
 		message: names
 			.map((n) => `<p><b>${esc(check.titles[n] || n)}</b> ${open_btn(n)}<br>${check.errors[n].message}</p>`)
