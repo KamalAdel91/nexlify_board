@@ -595,7 +595,7 @@ def check_move(doctype: str, names, field: str, to: str, values=None, dry_run: i
 	values = frappe.parse_json(values) or {}
 	meta = frappe.get_meta(doctype)
 	rules = [r for r in get_rules(doctype) if r.stage_field == field]
-	docs, titles, errors, candidates = {}, {}, {}, []
+	docs, titles, errors, candidates, possible = {}, {}, {}, [], []
 	open_form = False
 	for name in names:
 		doc = frappe.get_doc(doctype, name)
@@ -623,6 +623,11 @@ def check_move(doctype: str, names, field: str, to: str, values=None, dry_run: i
 		for f in need:
 			if f not in candidates:
 				candidates.append(f)
+		# what the rules may ask for once a value is typed (a condition on it): in the popup, hidden till then
+		for rule in active:
+			for f in rule.fields:
+				if f.fieldname not in possible and is_empty(doc.get(f.fieldname), meta.get_field(f.fieldname)):
+					possible.append(f.fieldname)
 
 		# from here `doc` is the document after the move, typed values included
 		typed = {k: data[k] for k in values if meta.get_field(k) and is_empty(doc.get(k), meta.get_field(k))}
@@ -649,7 +654,9 @@ def check_move(doctype: str, names, field: str, to: str, values=None, dry_run: i
 		if error:
 			errors[name] = error
 	related = _related_fields(meta, candidates) if len(names) == 1 else []
+	possible = [f for f in possible if f not in candidates and f not in related and meta.get_field(f)]
 	return {
+		"possible": possible,
 		"open_form": open_form,
 		"docs": docs,
 		"titles": titles,
@@ -657,7 +664,7 @@ def check_move(doctype: str, names, field: str, to: str, values=None, dry_run: i
 		"candidates": candidates,
 		"related": related,
 		"show_flow": show_flow(doctype),
-		"fields": {f: _field_info(meta, f) for f in candidates + related},
+		"fields": {f: _field_info(meta, f) for f in candidates + related + possible},
 	}
 
 

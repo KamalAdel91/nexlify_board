@@ -385,7 +385,7 @@ async function ask_for_move(doctype, names, field, to, allow_form = true, dry_ru
 	}
 	// a Table MultiSelect in a dialog needs its child DocType loaded
 	await Promise.all(
-		check.candidates
+		[...check.candidates, ...(check.possible || [])]
 			.filter((f) => check.fields[f].fieldtype === "Table MultiSelect")
 			.map((f) => frappe.model.with_doctype(check.fields[f].options))
 	);
@@ -401,6 +401,12 @@ async function ask_for_move(doctype, names, field, to, allow_form = true, dry_ru
 		handlers = await client_script_handlers(doctype);
 	}
 	const related = check.related || [];
+	// the fields asked now, and those a rule asks once a value is typed (hidden till then); a field only the
+	// form can fill isn't among the latter: the save asks for it
+	const asked = [
+		...check.candidates,
+		...(check.possible || []).filter((f) => !check.candidates.includes(f) && !form_only(f)),
+	];
 
 	return new Promise((resolve) => {
 		let done = false;
@@ -413,7 +419,7 @@ async function ask_for_move(doctype, names, field, to, allow_form = true, dry_ru
 		};
 		const show_needed = () => {
 			const need = needed();
-			for (const f of check.candidates) {
+			for (const f of asked) {
 				dialog.set_df_property(f, "hidden", need.has(f) ? 0 : 1);
 				dialog.set_df_property(f, "reqd", need.has(f) ? 1 : 0);
 			}
@@ -431,7 +437,7 @@ async function ask_for_move(doctype, names, field, to, allow_form = true, dry_ru
 			title: single ? check.titles[names[0]] || names[0] : __("{0} records", [names.length]),
 			doc,
 			fields: [
-				...check.candidates.map((f) => {
+				...asked.map((f) => {
 					const { label, fieldtype, options, description } = check.fields[f];
 					return { fieldname: f, label, fieldtype, options, description, onchange: () => changed(f) };
 				}),
@@ -489,8 +495,21 @@ async function ask_for_move(doctype, names, field, to, allow_form = true, dry_ru
 		});
 		// a field changed: its Client Script events, then the rules again
 		form = single ? popup_form(doctype, names[0], doc, dialog, handlers) : null;
+		// a dialog made on the document takes its fields' definitions from the DocType, without their
+		// onchange: put it back, so what is typed reaches the rules
+		for (const f of [...asked, ...related]) {
+			const control = dialog.fields_dict[f];
+			if (control && !control.df.onchange) control.df.onchange = () => changed(f);
+		}
 		changed = async (f) => {
-			if (form) await form.run(f);
+			// the form's own event for the field first; failing, the rules still see the value
+			if (form) {
+				try {
+					await form.run(f);
+				} catch (e) {
+					console.error(e);
+				}
+			}
 			await recheck();
 		};
 		show_needed();
