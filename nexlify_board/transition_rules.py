@@ -59,7 +59,7 @@ def clear_cache():
 
 
 def get_settings(doctype):
-	"""This DocType's row in Nexlify Board Settings: {check_moves, flow_method, blocked_move}, or {}."""
+	"""This DocType's row in Nexlify Board Settings: {check_moves, flow_method, show_flow}, or {}."""
 	return (frappe.cache.get_value(SETTINGS_KEY, generator=_load_settings) or {}).get(doctype) or {}
 
 
@@ -68,7 +68,7 @@ def _load_settings():
 		return {}
 	columns = {c.lower() for c in frappe.db.get_table_columns("Nexlify Board DocType")}
 	fields = ["reference_doctype", "check_moves", "flow_method"]
-	fields += [c for c in ("blocked_move",) if c in columns]  # before migrate
+	fields += [c for c in ("show_flow",) if c in columns]  # before migrate
 	rows = frappe.get_all(
 		"Nexlify Board DocType",
 		filters={"parent": "Nexlify Board Settings", "parenttype": "Nexlify Board Settings"},
@@ -78,10 +78,15 @@ def _load_settings():
 		r.reference_doctype: {
 			"check_moves": cint(r.check_moves),
 			"flow_method": (r.flow_method or "").strip(),
-			"blocked_move": r.get("blocked_move") or "Flow",
+			"show_flow": cint(r.get("show_flow", 1)),
 		}
 		for r in rows
 	}
+
+
+def show_flow(doctype):
+	"""The DocType shows the Flow (its settings row's Show Flow; no row: it does)."""
+	return bool(get_settings(doctype).get("show_flow", 1))
 
 
 def call_method(method, **kwargs):
@@ -435,7 +440,7 @@ def get_stage_fields(doctype: str):
 		"stage_fields": sorted({r.stage_field for r in rules}),
 		"watch": sorted(watch - {"get"}),
 		"check_moves": bool(rules) or bool(settings.get("check_moves")),
-		"flow": bool(rules) or bool(settings.get("flow_method")),
+		"flow": show_flow(doctype) and (bool(rules) or bool(settings.get("flow_method"))),
 	}
 
 
@@ -629,7 +634,7 @@ def check_move(doctype: str, names, field: str, to: str, values=None, dry_run: i
 		"errors": errors,
 		"candidates": candidates,
 		"related": related,
-		"blocked_move": get_settings(doctype).get("blocked_move") or "Flow",
+		"show_flow": show_flow(doctype),
 		"fields": {f: _field_info(meta, f) for f in candidates + related},
 	}
 

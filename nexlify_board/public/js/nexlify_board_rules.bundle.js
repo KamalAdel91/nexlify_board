@@ -515,8 +515,8 @@ function show_errors(doctype, check) {
 	const open_btn = (name) =>
 		`<button class="btn btn-xs btn-default nx-action" data-nx-action="form" ` +
 		`data-doctype="${esc(doctype)}" data-name="${esc(name)}">${__("Open Form")}</button>`;
-	// the Flow, unless the DocType's settings ask for the message alone (A Blocked Move Shows)
-	if (names.length === 1 && check.blocked_move !== "Message") {
+	// the Flow, unless the DocType's settings turn it off (Show Flow)
+	if (names.length === 1 && check.show_flow) {
 		const { message, rule } = check.errors[names[0]];
 		// a rule's message is already a step in the flow; anything else is shown above it
 		show_flow(doctype, names[0], { to: check.to, error: rule ? null : message });
