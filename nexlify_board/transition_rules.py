@@ -59,20 +59,27 @@ def clear_cache():
 
 
 def get_settings(doctype):
-	"""This DocType's row in Nexlify Board Settings: {check_moves, flow_method}, or {}."""
+	"""This DocType's row in Nexlify Board Settings: {check_moves, flow_method, blocked_move}, or {}."""
 	return (frappe.cache.get_value(SETTINGS_KEY, generator=_load_settings) or {}).get(doctype) or {}
 
 
 def _load_settings():
 	if not frappe.db.table_exists("Nexlify Board DocType"):
 		return {}
+	columns = {c.lower() for c in frappe.db.get_table_columns("Nexlify Board DocType")}
+	fields = ["reference_doctype", "check_moves", "flow_method"]
+	fields += [c for c in ("blocked_move",) if c in columns]  # before migrate
 	rows = frappe.get_all(
 		"Nexlify Board DocType",
 		filters={"parent": "Nexlify Board Settings", "parenttype": "Nexlify Board Settings"},
-		fields=["reference_doctype", "check_moves", "flow_method"],
+		fields=fields,
 	)
 	return {
-		r.reference_doctype: {"check_moves": cint(r.check_moves), "flow_method": (r.flow_method or "").strip()}
+		r.reference_doctype: {
+			"check_moves": cint(r.check_moves),
+			"flow_method": (r.flow_method or "").strip(),
+			"blocked_move": r.get("blocked_move") or "Flow",
+		}
 		for r in rows
 	}
 
@@ -622,6 +629,7 @@ def check_move(doctype: str, names, field: str, to: str, values=None, dry_run: i
 		"errors": errors,
 		"candidates": candidates,
 		"related": related,
+		"blocked_move": get_settings(doctype).get("blocked_move") or "Flow",
 		"fields": {f: _field_info(meta, f) for f in candidates + related},
 	}
 
@@ -746,6 +754,9 @@ def stage_order(doctype, field, board=None):
 def _steps(doc, rules, data, meta):
 	out = []
 	for rule in rules:
+		# who may move is not a step the document takes
+		if not rule.fields and not rule.condition and not rule.get("confirm_view"):
+			continue
 		done = True
 		label = rule.get("step_label") or strip_html(_(rule.message or "")).strip()
 		if rule.fields:

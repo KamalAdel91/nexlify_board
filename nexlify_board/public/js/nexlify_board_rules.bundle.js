@@ -515,14 +515,15 @@ function show_errors(doctype, check) {
 	const open_btn = (name) =>
 		`<button class="btn btn-xs btn-default nx-action" data-nx-action="form" ` +
 		`data-doctype="${esc(doctype)}" data-name="${esc(name)}">${__("Open Form")}</button>`;
-	if (names.length === 1) {
+	// the Flow, unless the DocType's settings ask for the message alone (A Blocked Move Shows)
+	if (names.length === 1 && check.blocked_move !== "Message") {
 		const { message, rule } = check.errors[names[0]];
 		// a rule's message is already a step in the flow; anything else is shown above it
 		show_flow(doctype, names[0], { to: check.to, error: rule ? null : message });
 		return;
 	}
 	frappe.msgprint({
-		title: __("Not moved"),
+		title: names.length === 1 ? check.errors[names[0]].title || __("Not moved") : __("Not moved"),
 		indicator: "red",
 		message: names
 			.map((n) => `<p><b>${esc(check.titles[n] || n)}</b> ${open_btn(n)}<br>${check.errors[n].message}</p>`)

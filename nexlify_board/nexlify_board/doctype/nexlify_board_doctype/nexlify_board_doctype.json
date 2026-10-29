@@ -5,10 +5,11 @@
  "istable": 1,
  "editable_grid": 1,
  "engine": "InnoDB",
- "modified": "2026-10-13 17:00:00.000000",
+ "modified": "2026-10-29 13:25:07.522736",
  "field_order": [
   "reference_doctype",
   "check_moves",
+  "blocked_move",
   "flow_method"
  ],
  "fields": [
@@ -29,6 +30,16 @@
    "in_list_view": 1,
    "columns": 2,
    "description": "Before a Kanban drag, run the save checks without saving and show what blocks the move."
+  },
+  {
+   "fieldname": "blocked_move",
+   "fieldtype": "Select",
+   "label": "A Blocked Move Shows",
+   "options": "Flow\nMessage",
+   "default": "Flow",
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "Flow: every stage and its steps. Message: only why the move is blocked, with its Open Form and action buttons. Fields a rule asks for are asked in a popup either way."
   },
   {
    "fieldname": "flow_method",
