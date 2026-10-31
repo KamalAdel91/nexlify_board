@@ -15,10 +15,27 @@ const pending = new Map(); // "doctype::name" -> { to, values }, read by the Kan
 const decisions = new WeakMap(); // move.cardIds -> one decision per drag
 const known = {}; // doctype -> has a Flow (sync, for the card menu)
 
+// A read the open form doesn't wait for. A frappe.call is one of Frappe's pending calls, and a form
+// script after a handler that returns nothing waits for all of them (frappe.after_server_call): on a
+// slow network the form's own buttons showed late, and the ones it takes off showed meanwhile.
+async function background_read(method, args) {
+	const r = await fetch(`/api/method/${method}`, {
+		method: "POST",
+		headers: {
+			Accept: "application/json",
+			"Content-Type": "application/json",
+			"X-Frappe-CSRF-Token": frappe.csrf_token,
+		},
+		body: JSON.stringify(args),
+	});
+	if (!r.ok) throw new Error(`${method}: ${r.status}`);
+	return (await r.json()).message;
+}
+
 function stage_info(doctype) {
 	const hit = infos[doctype];
 	if (!hit || Date.now() - hit.at > 60000) {
-		const promise = frappe.xcall(API + "get_stage_fields", { doctype }).catch(() => ({}));
+		const promise = background_read(API + "get_stage_fields", { doctype }).catch(() => ({}));
 		infos[doctype] = { at: Date.now(), promise };
 	}
 	return infos[doctype].promise;
@@ -943,7 +960,7 @@ async function form_rules(frm) {
 }
 
 async function mark_required(frm) {
-	const need = await frappe.xcall(API + "required_in_form", { doc: frm.doc });
+	const need = await background_read(API + "required_in_form", { doc: frm.doc });
 	const meta_reqd = (f) => frappe.get_meta(frm.doctype).fields.find((df) => df.fieldname === f)?.reqd;
 	for (const f of frm.__nx_reqd || []) {
 		if (!need.includes(f) && !meta_reqd(f)) frm.toggle_reqd(f, false);
