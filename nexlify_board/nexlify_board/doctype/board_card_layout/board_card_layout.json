@@ -22,6 +22,11 @@
   "path_style",
   "dedupe_actions",
   "form_actions",
+  "section_columns",
+  "column_titles",
+  "column_color_field",
+  "column_break_columns",
+  "column_title_font",
   "section_hero",
   "hero_field",
   "hero_target",
@@ -142,6 +147,39 @@
    "description": "The next step's button and the card buttons also show at the top of the form; several go under Actions"
   },
   {
+   "fieldname": "section_columns",
+   "fieldtype": "Section Break",
+   "label": "Columns",
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.column_titles",
+   "description": "How the board's column headers look."
+  },
+  {
+   "fieldname": "column_titles",
+   "fieldtype": "Check",
+   "label": "Large Column Titles",
+   "default": "0",
+   "description": "Each column's name bigger, in its color, its count in a pill, and a band of its color on top. Off: Frappe's own headers."
+  },
+  {
+   "fieldname": "column_color_field",
+   "fieldtype": "Data",
+   "label": "Column Color Field",
+   "depends_on": "eval:doc.column_titles",
+   "description": "A Color field of the stages' DocType (the board's field links to it), e.g. color: each column takes its stage's own color. Empty: the board column's color."
+  },
+  {
+   "fieldname": "column_break_columns",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_title_font",
+   "fieldtype": "Data",
+   "label": "Column Title Font",
+   "depends_on": "eval:doc.column_titles",
+   "description": "A font the browser has (CSS font-family), e.g. Georgia, serif. Empty: the site's font."
+  },
+  {
    "fieldname": "section_hero",
    "fieldtype": "Section Break",
    "label": "Hero Number",
@@ -173,7 +211,7 @@
    "fieldname": "hero_note",
    "fieldtype": "Data",
    "label": "Line Under It",
-   "description": "e.g. Cost {total_cost} \u00b7 margin {=doc.total - doc.total_cost}"
+   "description": "e.g. Cost {total_cost} · margin {=doc.total - doc.total_cost}"
   },
   {
    "fieldname": "section_next",
@@ -195,7 +233,7 @@
    "label": "Checklist",
    "collapsible": 1,
    "collapsible_depends_on": "eval:1",
-   "description": "Short \u2713 / \u25cb lines: what is done and what isn't"
+   "description": "Short ✓ / ○ lines: what is done and what isn't"
   },
   {
    "fieldname": "checklist",
@@ -316,7 +354,7 @@
  "owner": "Administrator",
  "modified_by": "Administrator",
  "creation": "2026-10-14 13:40:00.000000",
- "modified": "2026-10-14 19:30:00.000000",
+ "modified": "2026-11-01 12:00:00.000000",
  "autoname": "field:reference_doctype",
  "naming_rule": "By fieldname"
 }

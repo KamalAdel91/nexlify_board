@@ -60,9 +60,14 @@
 			const waiters = q.waiters;
 			queues[dt] = { names: new Set(), waiters: {} };
 			const done = (by) => names.forEach((n) => (waiters[n] || []).forEach((fn) => fn(by[n] || null)));
-			frappe.db
-				.get_list(dt, { filters: { name: ["in", names] }, fields: needed(dt, layout), limit: names.length })
-				.then((rows) => done(Object.fromEntries(rows.map((r) => [r.name, r]))))
+			// a board drawing every loaded card asks for hundreds at once: in parts, and posted (a GET that
+			// long is refused, and frappe.db.get_list then never settles)
+			const fields = needed(dt, layout);
+			const parts = [];
+			for (let i = 0; i < names.length; i += 100) parts.push(names.slice(i, i + 100));
+			Promise.all(parts.map((part) => frappe.xcall("frappe.desk.reportview.get_list",
+				{ doctype: dt, filters: { name: ["in", part] }, fields, limit: part.length })))
+				.then((all) => done(Object.fromEntries(all.flat().map((r) => [r.name, r]))))
 				.catch((e) => {
 					console.error("Nexlify Board cards: could not read", dt, e);
 					done({});
@@ -411,6 +416,7 @@
 		el.style.borderLeft = stripe ? `3px solid ${stripe.color}` : card.color ? `3px solid ${card.color}` : "";
 
 		const lines = make("div", "", "display:flex;flex-direction:column;gap:2px");
+		const subtitles = [];
 		const badges = make("div", "", "display:flex;flex-wrap:wrap;gap:4px");
 		const numbers = make("div", "", "display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:6px 12px");
 		const bottom = [];
@@ -436,11 +442,26 @@
 			} else if (f.show_as === "User") {
 				bottom.push(user_avatar(page, v, label));
 			} else {
-				const s = make("div", "", `font-size:12px;color:${MUTED};white-space:nowrap;overflow:hidden;text-overflow:ellipsis`);
+				// a class per kind, so an app can style its own boards' lines
+				// (a subtitle leaves the body for the title: added, so a repaint takes it away first)
+				const s = make("div", f.show_as === "Subtitle" ? "nx-card-subtitle nx-card-added" : "nx-card-line",
+					`font-size:12px;color:${MUTED};white-space:nowrap;overflow:hidden;text-overflow:ellipsis`);
 				const html = frappe.format(v, df, { inline: true }, doc);
 				s.innerHTML = f.show_as === "Subtitle" ? html : `${esc(label)}: <span style="color:${STRONG}">${html}</span>`;
-				lines.appendChild(s);
+				// a subtitle goes under the card's title; the other lines with the card's details
+				if (f.show_as === "Subtitle" && title_row) subtitles.push(s);
+				else lines.appendChild(s);
 			}
+		});
+
+		// under the title, after the document's name when it shows
+		let anchor = title_row;
+		if (anchor && anchor.nextElementSibling && anchor.nextElementSibling.classList.contains("nx-card-added")) {
+			anchor = anchor.nextElementSibling;
+		}
+		subtitles.forEach((s) => {
+			anchor.insertAdjacentElement("afterend", s);
+			anchor = s;
 		});
 
 		const top = make("div", "", "display:flex;flex-direction:column;gap:6px");
@@ -534,6 +555,80 @@
 				holder.appendChild(b);
 			});
 		}
+	}
+
+	// the column headers (Large Column Titles): each name bigger, in its column's color, its count in a pill, a
+	// band of the color on top. The color is the stage's own (Column Color Field), else the board column's. Set
+	// on the headers Frappe draws, again each time it draws them: styles only, so the board's other scripts
+	// that watch the headers aren't woken.
+	const column_colors = {};
+	function colors_of(dt, layout, field) {
+		const key = `${dt}|${field}|${layout.column_color_field || ""}`;
+		if (column_colors[key]) return column_colors[key];
+		const df = frappe.meta.get_docfield(dt, field);
+		const f = layout.column_color_field;
+		column_colors[key] = df && df.fieldtype === "Link" && f
+			? frappe.db.get_list(df.options, { fields: ["name", f], limit: 0 })
+				.then((rows) => Object.fromEntries(rows.filter((r) => r[f]).map((r) => [r.name, r[f]])))
+				.catch(() => ({}))
+			: Promise.resolve({});
+		return column_colors[key];
+	}
+	function dot_color(dot) {
+		if (!dot) return null;
+		for (const pseudo of [null, "::before"]) {
+			const c = getComputedStyle(dot, pseudo).backgroundColor;
+			if (c && c !== "transparent" && !/rgba\(.*,\s*0\)$/.test(c)) return c;
+		}
+		return null;
+	}
+	function paint_columns(root, colors, layout) {
+		root.querySelectorAll(".kn-column").forEach((col) => {
+			const header = col.querySelector(":scope > .kn-column-header");
+			const title = header && header.querySelector(".kn-column-title");
+			if (!title) return;
+			const dot = header.querySelector(".kn-column-dot");
+			const color = colors[col.dataset.col] || dot_color(dot) || "var(--ink-gray-5, #888)";
+			// the text darker (lighter in dark mode) than the color, to read on the column
+			const ink = `color-mix(in srgb, ${color} 72%, var(--ink-gray-9, #111))`;
+			col.style.borderTop = `3px solid ${color}`;
+			header.style.paddingTop = "10px";
+			if (dot) dot.style.display = "none";
+			Object.assign(title.style, {
+				fontSize: "15px",
+				fontWeight: "700",
+				letterSpacing: "-0.005em",
+				color: ink,
+				fontFamily: layout.column_title_font || "",
+			});
+			const count = header.querySelector(".kn-column-count");
+			if (count) {
+				Object.assign(count.style, {
+					color: ink,
+					background: `color-mix(in srgb, ${color} 14%, transparent)`,
+					borderRadius: "999px",
+					padding: "1px 8px",
+					fontSize: "12px",
+					fontWeight: "600",
+				});
+			}
+		});
+	}
+	function style_columns(dt, layout, page) {
+		if (!cint(layout.column_titles) || !page || !page.$container || !page.field_name) return;
+		const root = page.$container[0];
+		if (page._nx_columns && page._nx_columns.root === root && page._nx_columns.field === page.field_name) return;
+		if (page._nx_columns) page._nx_columns.observer.disconnect();
+		const field = page.field_name;
+		let frame = null;
+		const run = () => {
+			cancelAnimationFrame(frame);
+			frame = requestAnimationFrame(() => colors_of(dt, layout, field).then((colors) => paint_columns(root, colors, layout)));
+		};
+		const observer = new MutationObserver(run);
+		observer.observe(root, { childList: true, subtree: true });
+		page._nx_columns = { root, field, observer };
+		run();
 	}
 
 	const live = {};
@@ -648,6 +743,10 @@
 			return {
 				...raw,
 				__nx_cards: true,
+				// these cards draw once their data arrives, after the column measured them: a column
+				// that redraws its visible window as it scrolls would measure them short and jump.
+				// It draws every loaded card once instead; more still load as it scrolls.
+				options: { ...(raw.options || {}), virtualization: false },
 				callbacks: {
 					...(raw.callbacks || {}),
 					onAfterCardMove: (move) => {
@@ -660,6 +759,11 @@
 					},
 				},
 				renderCard: (card, el, ctx, page) => {
+					try {
+						style_columns(dt, layout, page);
+					} catch (e) {
+						console.error("Nexlify Board columns", e);
+					}
 					try {
 						if (cint(layout.replace_card)) {
 							// scripts that add to the card (card_badges) still run: their "default card" is ours
