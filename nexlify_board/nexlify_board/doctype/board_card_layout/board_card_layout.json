@@ -159,7 +159,7 @@
    "fieldtype": "Check",
    "label": "Large Column Titles",
    "default": "0",
-   "description": "Each column's name bigger, in its color, its count in a pill, and a band of its color on top. Off: Frappe's own headers."
+   "description": "Each column's name bigger, in its color, its count in a pill, a band of its color on top, and room between the filters and the columns. Off: Frappe's own headers."
   },
   {
    "fieldname": "column_color_field",
@@ -354,7 +354,7 @@
  "owner": "Administrator",
  "modified_by": "Administrator",
  "creation": "2026-10-14 13:40:00.000000",
- "modified": "2026-11-01 12:00:00.000000",
+ "modified": "2026-11-01 20:00:00.000000",
  "autoname": "field:reference_doctype",
  "naming_rule": "By fieldname"
 }

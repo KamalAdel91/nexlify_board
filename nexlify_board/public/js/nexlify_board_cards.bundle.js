@@ -583,6 +583,9 @@
 		return null;
 	}
 	function paint_columns(root, colors, layout) {
+		// room between the filters above and the columns, which Frappe's board draws right under them
+		const container = root.classList.contains("kanban-v2-container") ? root : root.querySelector(".kanban-v2-container");
+		if (container) container.style.paddingTop = "12px";
 		root.querySelectorAll(".kn-column").forEach((col) => {
 			const header = col.querySelector(":scope > .kn-column-header");
 			const title = header && header.querySelector(".kn-column-title");
