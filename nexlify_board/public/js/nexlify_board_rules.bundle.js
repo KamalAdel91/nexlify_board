@@ -447,6 +447,8 @@ async function ask_for_move(doctype, names, field, to, allow_form = true, dry_ru
 				dialog.set_df_property(f, "hidden", need.has(f) ? 0 : 1);
 				dialog.set_df_property(f, "reqd", need.has(f) ? 1 : 0);
 			}
+			// a section left empty while its fields were hidden (by their Depends On) shows again
+			dialog.refresh_sections();
 		};
 		// conditions can read what was just typed, so dependent fields appear or hide
 		const recheck = async () => {
@@ -524,6 +526,11 @@ async function ask_for_move(doctype, names, field, to, allow_form = true, dry_ru
 		for (const f of [...asked, ...related]) {
 			const control = dialog.fields_dict[f];
 			if (control && !control.df.onchange) control.df.onchange = () => changed(f);
+		}
+		// nor read only: a field the rules ask for is typed here, even one read only in the form
+		for (const f of asked) {
+			const control = dialog.fields_dict[f];
+			if (control && control.df.read_only && !control.df.read_only_depends_on) dialog.set_df_property(f, "read_only", 0);
 		}
 		changed = async (f) => {
 			// the form's own event for the field first; failing, the rules still see the value
