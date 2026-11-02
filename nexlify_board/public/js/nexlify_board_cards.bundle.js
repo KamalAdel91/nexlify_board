@@ -659,11 +659,24 @@
 	}
 
 	const live = {};
+	// what each card last showed: a card drawn again (the board loading more cards as it scrolls redraws its
+	// column) shows it at once, and is painted again only if its data came back changed
+	const shown = {};
 	function decorate(dt, layout, card, el, body, page, overlay) {
 		(live[dt] = live[dt] || {})[card.name] = { layout, card, el, body, page };
 		const ver = overlay ? "moved:" + Date.now() : card.modified;
 		const field = page && page.field_name;
 		const want = cint(layout.show_stage_path) && field;
+		const known = !overlay && (shown[dt] || {})[card.name];
+		if (known) {
+			try {
+				live[dt][card.name].doc = known.doc;
+				live[dt][card.name].hist = known.hist;
+				paint(dt, layout, card, el, body, page, known.doc, known.hist);
+			} catch (e) {
+				console.error("Nexlify Board card", e);
+			}
+		}
 		Promise.all([
 			fetch_row(dt, layout, card.name, ver),
 			want ? fetch_history(dt, field, card.name, ver) : Promise.resolve(null),
@@ -671,9 +684,12 @@
 			if (!doc) return;
 			try {
 				const data = { ...doc, ...(overlay || {}) };
+				const same = known && JSON.stringify(known.doc) === JSON.stringify(data)
+					&& JSON.stringify(known.hist) === JSON.stringify(hist);
+				(shown[dt] = shown[dt] || {})[card.name] = { doc: data, hist };
 				live[dt][card.name].doc = data;
 				live[dt][card.name].hist = hist;
-				paint(dt, layout, card, el, body, page, data, hist);
+				if (!same) paint(dt, layout, card, el, body, page, data, hist);
 			} catch (e) {
 				console.error("Nexlify Board card", e);
 			}
