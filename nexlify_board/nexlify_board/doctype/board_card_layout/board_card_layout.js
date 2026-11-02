@@ -18,5 +18,6 @@ function set_field_options(frm) {
 		frm.set_df_property("hero_target", "options", nums);
 		frm.set_df_property("progress_target", "options", nums);
 		frm.set_df_property("progress_secondary", "options", nums);
+		frm.fields_dict.progress_parts.grid.update_docfield_property("fieldname", "options", nums);
 	});
 }

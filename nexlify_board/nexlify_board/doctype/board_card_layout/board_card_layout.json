@@ -48,6 +48,10 @@
   "progress_secondary",
   "progress_secondary_label",
   "progress_condition",
+  "progress_value_condition",
+  "progress_secondary_condition",
+  "progress_left_condition",
+  "progress_parts",
   "section_actions",
   "actions",
   "section_rules",
@@ -306,6 +310,31 @@
    "fieldtype": "Small Text",
    "label": "Only When",
    "description": "eval:..."
+  },
+  {
+   "fieldname": "progress_value_condition",
+   "fieldtype": "Small Text",
+   "label": "Value Only When",
+   "description": "eval:... The value (and its share) in the box; without it the box shows the parts only"
+  },
+  {
+   "fieldname": "progress_secondary_condition",
+   "fieldtype": "Small Text",
+   "label": "Second Value Only When",
+   "description": "eval:..."
+  },
+  {
+   "fieldname": "progress_left_condition",
+   "fieldtype": "Small Text",
+   "label": "Left Only When",
+   "description": "eval:... What is left of the target"
+  },
+  {
+   "fieldname": "progress_parts",
+   "fieldtype": "Table",
+   "label": "Progress Parts",
+   "options": "Board Card Progress Part",
+   "description": "More amounts in the box's bar after the value, each in its color, with its amount under the bar"
   },
   {
    "fieldname": "section_actions",

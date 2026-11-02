@@ -5,6 +5,7 @@ LAYOUT_KEYS = ("replace_card", "title_field", "show_name", "compact_numbers", "s
                "hero_field", "hero_target", "hero_target_label", "hero_note",
                "progress_value", "progress_target", "progress_label",
                "progress_title", "progress_secondary", "progress_secondary_label", "progress_condition",
+               "progress_value_condition", "progress_secondary_condition", "progress_left_condition",
                "column_titles", "column_color_field", "column_title_font")
 FIELD_KEYS = ("fieldname", "label", "show_as", "position", "badge_colors", "condition")
 RULE_KEYS = ("condition", "color", "badge", "badge_theme")
@@ -23,6 +24,8 @@ def get_layouts_data():
 		layout["actions"] = [{k: a.get(k) for k in ACTION_KEYS} for a in d.get("actions") or []]
 		layout["next_steps"] = [{k: x.get(k) for k in ("condition", "text", "button_label", "action", "tone")}
 		                        for x in d.get("next_steps") or []]
+		layout["progress_parts"] = [{k: x.get(k) for k in ("fieldname", "label", "color", "condition")}
+		                            for x in d.get("progress_parts") or []]
 		layout["checklist"] = [{k: x.get(k) for k in ("label", "done_when", "only_when")}
 		                       for x in d.get("checklist") or []]
 		out[d.reference_doctype] = layout

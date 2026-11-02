@@ -41,6 +41,8 @@
 		scan(layout.hero_note);
 		scan(layout.progress_condition);
 		add(layout.progress_secondary);
+		[layout.progress_value_condition, layout.progress_secondary_condition, layout.progress_left_condition].forEach(scan);
+		(layout.progress_parts || []).forEach((x) => { add(x.fieldname); scan(x.condition); });
 		tpl(layout.hero_note);
 		(layout.next_steps || []).forEach((x) => { scan(x.condition); scan(x.text); tpl(x.text); });
 		(layout.checklist || []).forEach((x) => { scan(x.label); tpl(x.label); scan(x.done_when); scan(x.only_when); });
@@ -476,26 +478,48 @@
 		if (pv && pt && flt(doc[pt]) > 0 && layout.progress_title && test(layout.progress_condition, doc)) {
 			const v = flt(doc[pv]);
 			const t = flt(doc[pt]);
-			const sec = layout.progress_secondary ? Math.min(flt(doc[layout.progress_secondary]), v) : 0;
+			// each piece of the box can have its own condition (a setting the card's app keeps, say)
+			const show_v = test(layout.progress_value_condition, doc);
+			const show_sec = show_v && layout.progress_secondary && test(layout.progress_secondary_condition, doc);
+			const show_left = test(layout.progress_left_condition, doc);
+			const sec = show_sec ? Math.min(flt(doc[layout.progress_secondary]), v) : 0;
+			// more amounts after the value, each in its color (what is on its way, say)
+			const part_colors = [TONE.orange, TONE.purple || "#8b5cf6", TONE.red];
+			const parts = (layout.progress_parts || [])
+				.filter((x) => x.fieldname && flt(doc[x.fieldname]) > 0 && test(x.condition, doc))
+				.map((x, i) => ({ ...x, value: flt(doc[x.fieldname]), color: x.color || part_colors[i % part_colors.length] }));
 			const pct = (v / t) * 100;
 			const w = (x) => Math.max(0, Math.min((x / t) * 100, 100));
 			const dfv = df_of(dt, pv);
 			const fmt = (x) => number_text(x, dfv, doc, cint(layout.compact_numbers)).text;
-			const box = make("div", "", `padding:10px;border:1px solid ${LINE};border-radius:8px`);
-			box.innerHTML = `
-				<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
-					<span style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:${MUTED}">${esc(__(layout.progress_title))}</span>
-					<span style="font-size:11px;font-weight:600;color:${pct >= 99.995 ? TONE.green : MUTED}">${Math.round(pct)}%</span></div>
-				<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:4px">
-					<span style="white-space:nowrap"><b style="font-size:14px;color:${STRONG}" title="${esc(number_text(v, dfv, doc, false).full)}">${esc(fmt(v))}</b>
-						<span style="font-size:11px;color:${MUTED}">${esc(__(layout.progress_label || "done"))}</span></span>
-					<span style="white-space:nowrap"><b style="font-size:14px;color:${t - v > 0.005 ? STRONG : TONE.green}">${esc(fmt(Math.max(t - v, 0)))}</b>
-						<span style="font-size:11px;color:${MUTED}">${esc(__("left"))}</span></span></div>
-				<div style="height:6px;border-radius:999px;background:var(--surface-gray-3, rgba(128,128,128,.2));overflow:hidden;display:flex;margin-top:6px">
-					<i style="display:block;height:100%;width:${w(sec)}%;background:${TONE.green}"></i>
-					<i style="display:block;height:100%;width:${Math.max(w(v) - w(sec), 0)}%;background:var(--blue-500, #2490ef)"></i></div>
-				${layout.progress_secondary ? `<div style="font-size:11px;color:${MUTED};margin-top:4px">${esc(fmt(sec))} ${esc(__(layout.progress_secondary_label || "collected"))}</div>` : ""}`;
-			metrics.appendChild(box);
+			if (show_v || parts.length || show_left) {
+				// the bar's pieces one after the other, never past its end
+				let used = 0;
+				const piece = (x, color) => {
+					const width = Math.max(Math.min(w(x), 100 - used), 0);
+					used += width;
+					return width ? `<i style="display:block;height:100%;width:${width}%;background:${color}"></i>` : "";
+				};
+				const bar = (show_v ? piece(sec, TONE.green) + piece(v - sec, "var(--blue-500, #2490ef)") : "")
+					+ parts.map((x) => piece(x.value, x.color)).join("");
+				const legend = parts.map((x) => `<div style="font-size:11px;color:${MUTED};margin-top:3px;display:flex;align-items:center;gap:6px">
+						<i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${x.color}"></i>
+						<b style="color:${STRONG};font-weight:600">${esc(fmt(x.value))}</b> ${esc(__(x.label || ""))}</div>`).join("");
+				const box = make("div", "", `padding:10px;border:1px solid ${LINE};border-radius:8px`);
+				box.innerHTML = `
+					<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+						<span style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:${MUTED}">${esc(__(layout.progress_title))}</span>
+						${show_v ? `<span style="font-size:11px;font-weight:600;color:${pct >= 99.995 ? TONE.green : MUTED}">${Math.round(pct)}%</span>` : ""}</div>
+					<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:4px">
+						${show_v ? `<span style="white-space:nowrap"><b style="font-size:14px;color:${STRONG}" title="${esc(number_text(v, dfv, doc, false).full)}">${esc(fmt(v))}</b>
+							<span style="font-size:11px;color:${MUTED}">${esc(__(layout.progress_label || "done"))}</span></span>` : "<span></span>"}
+						${show_left ? `<span style="white-space:nowrap"><b style="font-size:14px;color:${t - v > 0.005 ? STRONG : TONE.green}">${esc(fmt(Math.max(t - v, 0)))}</b>
+							<span style="font-size:11px;color:${MUTED}">${esc(__("left"))}</span></span>` : ""}</div>
+					<div style="height:8px;border-radius:999px;background:var(--surface-gray-3, rgba(128,128,128,.2));overflow:hidden;display:flex;margin-top:6px">${bar}</div>
+					${show_sec ? `<div style="font-size:11px;color:${MUTED};margin-top:4px;display:flex;align-items:center;gap:6px"><i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${TONE.green}"></i>${esc(fmt(sec))} ${esc(__(layout.progress_secondary_label || "collected"))}</div>` : ""}
+					${legend}`;
+				metrics.appendChild(box);
+			}
 		} else if (pv && pt && flt(doc[pt]) > 0 && !layout.progress_title && test(layout.progress_condition, doc)) {
 			const pct = (flt(doc[pv]) / flt(doc[pt])) * 100;
 			const tone = pct >= 100 ? TONE.green : pct >= 80 ? TONE.orange : TONE.red;
