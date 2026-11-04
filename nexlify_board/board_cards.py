@@ -6,6 +6,7 @@ LAYOUT_KEYS = ("replace_card", "title_field", "show_name", "compact_numbers", "s
                "progress_value", "progress_target", "progress_label",
                "progress_title", "progress_secondary", "progress_secondary_label", "progress_condition",
                "progress_value_condition", "progress_secondary_condition", "progress_left_condition",
+               "progress_left", "progress_percent",
                "column_titles", "column_color_field", "column_title_font")
 FIELD_KEYS = ("fieldname", "label", "show_as", "position", "badge_colors", "condition")
 RULE_KEYS = ("condition", "color", "badge", "badge_theme")

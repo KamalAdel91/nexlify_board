@@ -51,6 +51,8 @@
   "progress_value_condition",
   "progress_secondary_condition",
   "progress_left_condition",
+  "progress_left",
+  "progress_percent",
   "progress_parts",
   "section_actions",
   "actions",
@@ -215,7 +217,7 @@
    "fieldname": "hero_note",
    "fieldtype": "Data",
    "label": "Line Under It",
-   "description": "e.g. Cost {total_cost} · margin {=doc.total - doc.total_cost}"
+   "description": "e.g. Cost {total_cost} \u00b7 margin {=doc.total - doc.total_cost}"
   },
   {
    "fieldname": "section_next",
@@ -237,7 +239,7 @@
    "label": "Checklist",
    "collapsible": 1,
    "collapsible_depends_on": "eval:1",
-   "description": "Short ✓ / ○ lines: what is done and what isn't"
+   "description": "Short \u2713 / \u25cb lines: what is done and what isn't"
   },
   {
    "fieldname": "checklist",
@@ -330,6 +332,18 @@
    "description": "eval:... What is left of the target"
   },
   {
+   "fieldname": "progress_left",
+   "fieldtype": "Select",
+   "label": "Left Field",
+   "description": "A number field holding what is left of the target. Empty: the target less the value."
+  },
+  {
+   "fieldname": "progress_percent",
+   "fieldtype": "Select",
+   "label": "Percent Field",
+   "description": "A percent field holding how much of the target the value is. Empty: worked out from the two."
+  },
+  {
    "fieldname": "progress_parts",
    "fieldtype": "Table",
    "label": "Progress Parts",
@@ -383,7 +397,7 @@
  "owner": "Administrator",
  "modified_by": "Administrator",
  "creation": "2026-10-14 13:40:00.000000",
- "modified": "2026-11-01 20:00:00.000000",
+ "modified": "2026-11-05 10:00:00.000000",
  "autoname": "field:reference_doctype",
  "naming_rule": "By fieldname"
 }

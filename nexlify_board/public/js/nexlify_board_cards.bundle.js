@@ -41,6 +41,8 @@
 		scan(layout.hero_note);
 		scan(layout.progress_condition);
 		add(layout.progress_secondary);
+		add(layout.progress_left);
+		add(layout.progress_percent);
 		[layout.progress_value_condition, layout.progress_secondary_condition, layout.progress_left_condition].forEach(scan);
 		(layout.progress_parts || []).forEach((x) => { add(x.fieldname); scan(x.condition); });
 		tpl(layout.hero_note);
@@ -488,7 +490,9 @@
 			const parts = (layout.progress_parts || [])
 				.filter((x) => x.fieldname && flt(doc[x.fieldname]) > 0 && test(x.condition, doc))
 				.map((x, i) => ({ ...x, value: flt(doc[x.fieldname]), color: x.color || part_colors[i % part_colors.length] }));
-			const pct = (v / t) * 100;
+			// the layout's own fields for what is left and the share, when it names them: worked out otherwise
+			const pct = layout.progress_percent ? flt(doc[layout.progress_percent]) : (v / t) * 100;
+			const left = layout.progress_left ? flt(doc[layout.progress_left]) : Math.max(t - v, 0);
 			const w = (x) => Math.max(0, Math.min((x / t) * 100, 100));
 			const dfv = df_of(dt, pv);
 			const fmt = (x) => number_text(x, dfv, doc, cint(layout.compact_numbers)).text;
@@ -513,7 +517,7 @@
 					<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:4px">
 						${show_v ? `<span style="white-space:nowrap"><b style="font-size:14px;color:${STRONG}" title="${esc(number_text(v, dfv, doc, false).full)}">${esc(fmt(v))}</b>
 							<span style="font-size:11px;color:${MUTED}">${esc(__(layout.progress_label || "done"))}</span></span>` : "<span></span>"}
-						${show_left ? `<span style="white-space:nowrap"><b style="font-size:14px;color:${t - v > 0.005 ? STRONG : TONE.green}">${esc(fmt(Math.max(t - v, 0)))}</b>
+						${show_left ? `<span style="white-space:nowrap"><b style="font-size:14px;color:${left > 0.005 ? STRONG : TONE.green}">${esc(fmt(left))}</b>
 							<span style="font-size:11px;color:${MUTED}">${esc(__("left"))}</span></span>` : ""}</div>
 					<div style="height:8px;border-radius:999px;background:var(--surface-gray-3, rgba(128,128,128,.2));overflow:hidden;display:flex;margin-top:6px">${bar}</div>
 					${show_sec ? `<div style="font-size:11px;color:${MUTED};margin-top:4px;display:flex;align-items:center;gap:6px"><i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${TONE.green}"></i>${esc(fmt(sec))} ${esc(__(layout.progress_secondary_label || "collected"))}</div>` : ""}
